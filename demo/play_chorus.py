@@ -1,15 +1,29 @@
+import os
+import sys
 from typing import Tuple, Iterator
 from itertools import cycle
 
+from pedalboard import (  # type: ignore[attr-defined]
+    Gain,
+    Reverb,
+    Pedalboard,
+    Convolution,
+    LowShelfFilter,
+)
 from pedalboard.io import AudioFile  # type: ignore[attr-defined]
 
-from guitar_synth.chord import Chord
-from guitar_synth.track import AudioTrack
-from guitar_synth.stroke import Velocity
-from guitar_synth.temporal import Time, TimeLine
-from guitar_synth.synthesis import Synthesizer
-from guitar_synth.instrument import StringTuning, PluckedStringInstrument
-from guitar_synth.processing import normalize
+root_dir = os.path.abspath(os.path.dirname(__file__)).removesuffix("demo")
+python_path = os.path.join(root_dir, "src")
+if python_path not in sys.path:
+    sys.path.append(python_path)
+
+from guitar_synth.chord import Chord  # noqa: E402
+from guitar_synth.track import AudioTrack  # noqa: E402
+from guitar_synth.stroke import Velocity  # noqa: E402
+from guitar_synth.temporal import Time, TimeLine  # noqa: E402
+from guitar_synth.synthesis import Synthesizer  # noqa: E402
+from guitar_synth.instrument import StringTuning, PluckedStringInstrument  # noqa: E402
+from guitar_synth.processing import normalize  # noqa: E402
 
 
 def main() -> None:
@@ -26,8 +40,18 @@ def main() -> None:
         audio_track.add_at(timeline.instant, audio_samples)
         timeline >> interval
 
+    effects = Pedalboard(
+        [
+            Reverb(),
+            Convolution(impulse_response_filename="ir/ukulele.wav", mix=0.95),
+            LowShelfFilter(cutoff_frequency_hz=440, gain_db=10, q=1),
+            Gain(gain_db=15),
+        ]
+    )
+    samples = effects(audio_track.samples, audio_track.sampling_rate)
+
     with AudioFile("chorus.mp3", "w", audio_track.sampling_rate) as file:
-        file.write(normalize(audio_track.samples))
+        file.write(normalize(samples))
 
 
 def strumming_pattern() -> Iterator[Tuple[float, Chord, Velocity]]:

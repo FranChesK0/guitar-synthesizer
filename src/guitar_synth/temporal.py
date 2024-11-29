@@ -9,7 +9,7 @@ type Hertz = int | float
 
 @dataclass(frozen=True)
 class Time:
-    seconds: Numeric
+    seconds: Decimal
 
     @classmethod
     def from_milliseconds(cls, milliseconds: Numeric) -> Self:
@@ -26,5 +26,27 @@ class Time:
             case _:
                 raise TypeError(f"Unexpected type '{type(seconds).__name__}' for seconds")
 
+    def __add__(self, seconds: Numeric | Self) -> "Time":
+        match seconds:
+            case Time() as time:
+                return Time(self.seconds + time.seconds)
+            case int() | Decimal():
+                return Time(self.seconds + seconds)
+            case float():
+                return Time(self.seconds + Decimal(str(seconds)))
+            case Fraction():
+                return Time(Fraction.from_decimal(self.seconds) + seconds)
+            case _:
+                raise TypeError(f"Unexpected type '{type(seconds).__name__}' for seconds")
+
     def get_num_samples(self, sample_rate: Hertz) -> int:
         return round(self.seconds * round(sample_rate))
+
+
+@dataclass
+class TimeLine:
+    instant: Time = Time(0)
+
+    def __rshift__(self, seconds: Numeric | Time) -> Self:
+        self.instant += seconds
+        return self

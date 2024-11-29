@@ -1,0 +1,37 @@
+title: Hello, World!  # Optional
+artist: John Doe  # Optional
+tracks:
+  acoustic:  # Arbitrary name
+    url: https://www.songsterr.com/hello  # Optional
+    weight: 0.8  # Optional (defaults to 1.0)
+    instrument:
+      tuning: [E2, A2, D3, G3, B3, E4]
+      vibration: 5.5
+      damping: 0.498  # Optional (defaults to 0.5)
+      effects:  # Optional
+        - Reverb
+        - Convolution:
+            impulse_response_filename: acoustic.wav
+            mix: 0.95
+    tablature:
+      beats_per_minute: 75
+      measures:
+        - time_signature: 4/4
+          notes:  # Optional (can be empty measure)
+            - frets: [0, 0, 2, 2, 0, ~]
+              offset: 1/8  # Optional (defaults to zero)
+              upstroke: true  # Optional (defaults to false)
+              arpeggio: 0.04  # Optional (defaults to 0.005)
+              vibration: 3.5  # Optional (overrides instrument's defaults)
+        - time_signature: 4/4
+        - time_signature: 4/4
+          notes: &loop
+            - frets: &seven [~, ~, ~, ~, 7, ~]
+            - frets: *seven
+              offset: 1/4
+            - frets: *seven
+              offset: 1/4
+            - frets: *seven
+              offset: 1/4
+        - time_signature: 4/4
+          notes: *loop

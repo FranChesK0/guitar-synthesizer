@@ -21,9 +21,9 @@ DEFAULT_ARPEGGIO_SECONDS: Final[float] = 0.005
 
 class Note(BaseModel):
     frets: List[Optional[Annotated[NonNegativeInt, Field(min_length=1)]]]
-    offset: Optional[Annotated[str, Field(pattern=r"\d+/\d+")]] = "0/1"
-    upstroke: Optional[bool] = False
-    arpeggio: Optional[NonNegativeFloat] = DEFAULT_ARPEGGIO_SECONDS
+    offset: Annotated[str, Field(pattern=r"\d+/\d+")] = "0/1"
+    upstroke: bool = False
+    arpeggio: NonNegativeFloat = DEFAULT_ARPEGGIO_SECONDS
     vibration: Optional[PositiveFloat] = None
 
 
@@ -50,13 +50,13 @@ class Instrument(BaseModel):
         List[Annotated[str, Field(pattern=r"([A-G]#?)(-?\d+)?")]], Field(min_length=1)
     ]
     vibration: PositiveFloat
-    damping: Optional[Annotated[float, Field(ge=0, le=0.5)]] = DEFAULT_STRING_DAMPING
-    effects: Optional[Tuple[str | Dict[Any, Any], ...]] = tuple()
+    damping: Annotated[float, Field(ge=0, le=0.5)] = DEFAULT_STRING_DAMPING
+    effects: Tuple[str | Dict[Any, Any], ...] = tuple()
 
 
 class Track(BaseModel):
     url: Optional[HttpUrl] = None
-    weight: Optional[NonNegativeFloat] = None
+    weight: NonNegativeFloat = 1.0
     instrument: Instrument
     tablature: Tablature
 

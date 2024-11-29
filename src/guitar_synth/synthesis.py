@@ -1,4 +1,5 @@
-from typing import Final, Iterator, Sequence
+from typing import Final, Iterator, Optional, Sequence
+from functools import cache
 from itertools import cycle
 from dataclasses import dataclass
 
@@ -6,7 +7,10 @@ import numpy as np
 from numpy.typing import NDArray
 
 from guitar_synth.burst import WhiteNoise, BurstGenerator
+from guitar_synth.chord import Chord
+from guitar_synth.stroke import Velocity, Direction
 from guitar_synth.temporal import Time, Hertz
+from guitar_synth.instrument import PluckedStringInstrument
 from guitar_synth.processing import normalize, remove_dc
 
 AUDIO_CD_SAMPLING_RATE: Final[int] = 44100
@@ -14,10 +18,30 @@ AUDIO_CD_SAMPLING_RATE: Final[int] = 44100
 
 @dataclass(frozen=True)
 class Synthesis:
+    instrument: PluckedStringInstrument
     burst_generator: BurstGenerator = WhiteNoise()
     sample_rate: int = AUDIO_CD_SAMPLING_RATE
 
-    def vibrate(
+    @cache
+    def strum_strings(
+        self, chord: Chord, velocity: Velocity, vibration: Optional[Time] = None
+    ) -> NDArray[np.float64]:
+        if vibration is None:
+            vibration = self.instrument.vibration
+        if velocity.direction == Direction.UP:
+            stroke = self.instrument.upstroke
+        else:
+            stroke = self.instrument.downstroke
+
+        sounds = tuple(
+            self._vibrate(pitch.frequency, vibration, self.instrument.damping)
+            for pitch in stroke(chord)
+        )
+
+        return self._overlay(sounds, velocity.delay)
+
+    @cache
+    def _vibrate(
         self, frequency: Hertz, duration: Time, damping: float = 0.5
     ) -> NDArray[np.float64]:
         assert 0 < damping <= 0.5
@@ -42,7 +66,7 @@ class Synthesis:
             )
         )
 
-    def overlay(
+    def _overlay(
         self, sounds: Sequence[NDArray[np.float64]], delay: Time
     ) -> NDArray[np.float64]:
         num_delay_samples = delay.get_num_samples(self.sample_rate)

@@ -2,18 +2,54 @@ import numpy as np
 import pytest  # noqa: F401
 from numpy.testing import assert_almost_equal
 
+from guitar_synth.chord import Chord
+from guitar_synth.stroke import Velocity, Direction
 from guitar_synth.temporal import Time
 from guitar_synth.synthesis import Synthesis
 
 
+# Test strum_strings method
+def test_strum_strings_upstroke(synthesis: Synthesis) -> None:
+    chord = Chord([0, 2, 2, 1, 0, 0])  # A major chord
+    velocity = Velocity(Direction.UP, Time(0.1))
+
+    output = synthesis.strum_strings(chord, velocity)
+
+    # Check if output is a numpy array and has the correct shape
+    assert isinstance(output, np.ndarray)
+    assert output.size > 0
+
+
+def test_strum_strings_downstroke(synthesis: Synthesis) -> None:
+    chord = Chord([0, 2, 2, 1, 0, 0])  # A major chord
+    velocity = Velocity(Direction.DOWN, Time(0.1))
+
+    output = synthesis.strum_strings(chord, velocity)
+
+    # Check if output is a numpy array and has the correct shape
+    assert isinstance(output, np.ndarray)
+    assert output.size > 0
+
+
+def test_strum_strings_with_vibration(synthesis: Synthesis) -> None:
+    chord = Chord([0, 2, 2, 1, 0, 0])  # A major chord
+    velocity = Velocity(Direction.UP, Time(0.1))
+    vibration = Time(0.5)
+
+    output = synthesis.strum_strings(chord, velocity, vibration)
+
+    # Check if output is a numpy array and has the correct shape
+    assert isinstance(output, np.ndarray)
+    assert output.size > 0
+
+
 # Test that vibrate generates the correct number of samples
-def test_vibrate_output_shape() -> None:
-    synthesis = Synthesis()
+def test_vibrate_output_shape(synthesis: Synthesis) -> None:
     frequency = 440  # A4
     duration = Time(2)
     sample_rate = synthesis.sample_rate
 
-    output = synthesis.vibrate(frequency, duration)
+    output = synthesis._vibrate(frequency, duration)
 
     # The output should have the correct number of samples
     expected_samples = duration.get_num_samples(sample_rate)
@@ -21,24 +57,22 @@ def test_vibrate_output_shape() -> None:
 
 
 # Test that vibrate generates normalized samples
-def test_vibrate_output_normalization() -> None:
-    synthesis = Synthesis()
+def test_vibrate_output_normalization(synthesis: Synthesis) -> None:
     frequency = 440  # A4
     duration = Time(2)
 
-    output = synthesis.vibrate(frequency, duration)
+    output = synthesis._vibrate(frequency, duration)
 
     # The output should be normalized
     assert_almost_equal(np.abs(output).max(), 1.0, decimal=5)
 
 
 # Test that vibrate removes DC offset
-def test_vibrate_removes_dc() -> None:
-    synthesis = Synthesis()
+def test_vibrate_removes_dc(synthesis: Synthesis) -> None:
     frequency = 440  # A4
     duration = Time(2)
 
-    output = synthesis.vibrate(frequency, duration)
+    output = synthesis._vibrate(frequency, duration)
 
     # The DC offset should be removed
     assert_almost_equal(output.mean(), 0.0, decimal=5)
@@ -46,20 +80,18 @@ def test_vibrate_removes_dc() -> None:
 
 # Test vibrate damping factor limits
 @pytest.mark.parametrize("damping", [0.1, 0.5])
-def test_vibrate_damping_limits(damping: float) -> None:
-    synthesis = Synthesis()
+def test_vibrate_damping_limits(synthesis: Synthesis, damping: float) -> None:
     frequency = 440  # A4
     duration = Time(2)
 
-    output = synthesis.vibrate(frequency, duration, damping=damping)
+    output = synthesis._vibrate(frequency, duration, damping=damping)
 
     # The output should be normalized
     assert_almost_equal(np.abs(output).max(), 1.0, decimal=5)
 
 
 # Test overlay output length
-def test_overlay_output_length() -> None:
-    synthesis = Synthesis()
+def test_overlay_output_length(synthesis: Synthesis) -> None:
     sample_rate = synthesis.sample_rate
     delay_time = Time(0.1)
 
@@ -68,7 +100,7 @@ def test_overlay_output_length() -> None:
     sound3 = np.ones(11025) * 3  # 0.25 seconds
 
     sounds = [sound1, sound2, sound3]
-    output = synthesis.overlay(sounds, delay_time)
+    output = synthesis._overlay(sounds, delay_time)
 
     # Check the number of delay samples
     num_delay_samples = delay_time.get_num_samples(sample_rate)
@@ -83,8 +115,7 @@ def test_overlay_output_length() -> None:
 
 
 # Test no overlap in non-overlapping areas
-def test_overlay_no_overlap() -> None:
-    synthesis = Synthesis()
+def test_overlay_no_overlap(synthesis: Synthesis) -> None:
     sample_rate = synthesis.sample_rate
     delay_time = Time(0.1)
 
@@ -92,7 +123,7 @@ def test_overlay_no_overlap() -> None:
     sound2 = np.ones(22050) * 2  # 0.5 seconds
 
     sounds = [sound1, sound2]
-    output = synthesis.overlay(sounds, delay_time)
+    output = synthesis._overlay(sounds, delay_time)
 
     # Check the number of delay samples
     num_delay_samples = delay_time.get_num_samples(sample_rate)
@@ -102,15 +133,14 @@ def test_overlay_no_overlap() -> None:
 
 
 # Test overlay with no delay
-def test_overlay_no_delay() -> None:
-    synthesis = Synthesis()
+def test_overlay_no_delay(synthesis: Synthesis) -> None:
     delay_time = Time(0)
 
     sound1 = np.ones(44100)  # 1 second
     sound2 = np.ones(22050) * 2  # 0.5 seconds
 
     sounds = [sound1, sound2]
-    output = synthesis.overlay(sounds, delay_time)
+    output = synthesis._overlay(sounds, delay_time)
 
     # Expected number of samples
     expected_num_samples = max(sound1.size, sound2.size)

@@ -1,4 +1,4 @@
-from typing import Final, Iterator
+from typing import Final, Iterator, Sequence
 from itertools import cycle
 from dataclasses import dataclass
 
@@ -41,3 +41,16 @@ class Synthesis:
                 )
             )
         )
+
+    def overlay(
+        self, sounds: Sequence[NDArray[np.float64]], delay: Time
+    ) -> NDArray[np.float64]:
+        num_delay_samples = delay.get_num_samples(self.sample_rate)
+        num_samples = max(
+            i * num_delay_samples + sound.size for i, sound in enumerate(sounds)
+        )
+        samples = np.zeros(num_samples, dtype=np.float64)
+        for i, sound in enumerate(sounds):
+            offset = i * num_delay_samples
+            samples[offset : offset + sound.size] += sound  # noqa: E203
+        return samples

@@ -3,7 +3,7 @@ name = "guitar-synthesizer"
 version = "0.1.0"
 description = ""
 authors = ["FranChesK0"]
-license = "MIT license"
+license = "MIT"
 readme = "README.md"
 packages = [{include = "guitar_synth", from = "src"}]
 

@@ -11,7 +11,7 @@ tracks:
       effects:  # Optional
         - Reverb
         - Convolution:
-            impulse_response_filename: acoustic.wav
+            impulse_response_filename: path/to/acoustic.wav
             mix: 0.95
     tablature:
       beats_per_minute: 75

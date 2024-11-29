@@ -20,7 +20,7 @@ DEFAULT_ARPEGGIO_SECONDS: Final[float] = 0.005
 
 
 class Note(BaseModel):
-    frets: List[Optional[Annotated[NonNegativeInt, Field(min_length=1)]]]
+    frets: Annotated[List[Optional[NonNegativeInt]], Field(min_length=1)]
     offset: Annotated[str, Field(pattern=r"\d+/\d+")] = "0/1"
     upstroke: bool = False
     arpeggio: NonNegativeFloat = DEFAULT_ARPEGGIO_SECONDS

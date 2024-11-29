@@ -17,7 +17,7 @@ AUDIO_CD_SAMPLING_RATE: Final[int] = 44100
 
 
 @dataclass(frozen=True)
-class Synthesis:
+class Synthesizer:
     instrument: PluckedStringInstrument
     burst_generator: BurstGenerator = WhiteNoise()
     sample_rate: int = AUDIO_CD_SAMPLING_RATE

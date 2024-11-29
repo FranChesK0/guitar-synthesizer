@@ -2,7 +2,7 @@ import pytest
 
 from guitar_synth.track import AudioTrack
 from guitar_synth.temporal import Time
-from guitar_synth.synthesis import Synthesis
+from guitar_synth.synthesis import Synthesizer
 from guitar_synth.instrument import StringTuning, PluckedStringInstrument
 
 
@@ -13,8 +13,8 @@ def instrument() -> PluckedStringInstrument:
 
 
 @pytest.fixture(scope="function")
-def synthesis(instrument: PluckedStringInstrument) -> Synthesis:
-    return Synthesis(instrument=instrument)
+def synthesizer(instrument: PluckedStringInstrument) -> Synthesizer:
+    return Synthesizer(instrument=instrument)
 
 
 @pytest.fixture(scope="function")
